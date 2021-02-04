@@ -1,25 +1,38 @@
 package com.cumt.blue;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import io.flutter.Log;
+import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
  * BluePlugin
  */
-public class BluePlugin implements FlutterPlugin, MethodCallHandler {
+public class BluePlugin extends FlutterActivity implements FlutterPlugin, MethodCallHandler {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private MethodChannel channel;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("aaa","c创建了");
+
+    }
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -32,6 +45,7 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (call.method.equals("getPlatformVersion")) {
+            Log.d("aaa","onMethodCall getPlatformVersion");
 
             result.success("Android " + android.os.Build.VERSION.RELEASE);
         } else if (call.method.equals("getBlueUsable")) {
@@ -66,11 +80,15 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler {
             if (mBluetoothAdapter != null) {
                 boolean onOff = call.arguments();
                 if (onOff) {
-                    result.success(mBluetoothAdapter.enable());
+                    mBluetoothAdapter.enable();
                 } else {
-                    result.success(mBluetoothAdapter.disable());
+                    mBluetoothAdapter.disable();
                 }
                 //  result.success(mBluetoothAdapter.enable());
+                //todo 开启蓝牙开关监听
+                startService(result);
+
+
             } else {
                 result.success("不支持蓝牙");
             }
@@ -85,4 +103,49 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler {
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
     }
+
+    BlueToothStateReceiver blueToothStateReceiver;
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        unregisterReceiver(blueToothStateReceiver);
+
+    }
+
+    private void startService(final Result result) {
+
+        //注册广播，蓝牙状态监听
+        blueToothStateReceiver = new BlueToothStateReceiver();
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(blueToothStateReceiver, filter);
+        blueToothStateReceiver.setOnBlueToothStateListener(new BlueToothStateReceiver.OnBlueToothStateListener() {
+            @Override
+            public void onStateOff() {
+                //do something
+                result.success(false);
+            }
+
+            @Override
+            public void onStateOn() {
+                //do something
+                result.success(true);
+
+            }
+
+            @Override
+            public void onStateTurningOn() {
+                //do something
+            }
+
+            @Override
+            public void onStateTurningOff() {
+                //do something
+            }
+        });
+
+    }
+
+
 }

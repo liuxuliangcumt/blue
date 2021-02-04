@@ -4,4 +4,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <!--启用应用启动设备发现或者操作蓝牙设备的超级管理员-->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <application>
+        <activity android:name=".BluePlugin"/>
+    </application>
 </manifest>
