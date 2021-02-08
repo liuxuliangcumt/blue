@@ -22,6 +22,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     initPlatformState();
+
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -37,6 +38,12 @@ class _MyAppState extends State<MyApp> {
       blueOpenState = await Blue.getBlueIsEnabled;
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
+    }
+    if(Blue.getMethodCall().method=="blueOnOff"){
+      setState(() {
+        _blueOpenState=Blue.getMethodCall().arguments;
+
+      });
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -74,6 +81,13 @@ class _MyAppState extends State<MyApp> {
                   openBlue(v);
                 },
               ),
+              MaterialButton(
+                color: Colors.blue,
+                onPressed: () {
+                  getDevices();
+                },
+                child: Text("获取设备列表"),
+              )
             ],
           ),
         ),
@@ -88,5 +102,14 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _blueOpenState = blueOpenState;
     });
+  }
+
+  void getDevices() async {
+    List<String> devices = await Blue.getBondedDevices;
+    print("蓝牙设备数量");
+    print(devices?.length);
+     for(int i=0;i<devices.length;i++){
+       print(devices[i]);
+     }
   }
 }

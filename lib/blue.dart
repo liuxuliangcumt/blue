@@ -1,10 +1,25 @@
-import 'dart:async';
-import 'dart:ffi';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
 class Blue {
   static const MethodChannel _channel = const MethodChannel('blue');
+
+  static MethodCall _call;
+
+  static void setCall() {
+    if (_call == null) {
+      _channel.setMethodCallHandler((call) {
+        _call = call;
+        return call.arguments;
+      });
+    }
+  }
+
+  static MethodCall getMethodCall() {
+    setCall();
+    return _call;
+  }
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
@@ -49,4 +64,18 @@ class Blue {
     final bool isOpen = await _channel.invokeMethod('blueOnOff', onOff);
     return isOpen;
   }
+
+  static Future<List<String>> get getBondedDevices async {
+    final List<dynamic> devices =
+        await _channel.invokeMethod('getBondedDevices');
+
+    print("蓝牙设备数量 ${devices.length}");
+    // print("蓝牙设备数量 ${}");
+
+    // return new List();
+    return devices.cast<String>();
+  }
+//static Future<List<String>> getAvaillList async{
+
+//}
 }
