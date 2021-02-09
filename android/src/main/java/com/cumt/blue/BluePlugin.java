@@ -3,6 +3,9 @@ package com.cumt.blue;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.IntentFilter;
 import android.os.Build;
 
@@ -28,11 +31,13 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
+
 
 /**
  * BluePlugin
  */
-public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, EventChannel.StreamHandler {
+public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, EventChannel.StreamHandler, RequestPermissionsResultListener {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -46,15 +51,16 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "blue");
         channel.setMethodCallHandler(this);
-        eventChannel =new EventChannel(flutterPluginBinding.getBinaryMessenger(), "blue");
-        eventChannel.setStreamHandler(this);
+
+     /*   eventChannel =new EventChannel(flutterPluginBinding.getBinaryMessenger(), "blue");
+        eventChannel.setStreamHandler(this);*/
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-         if (call.method.equals("getPlatformVersion")) {
+        if (call.method.equals("getPlatformVersion")) {
             Log.d("aaa", "onMethodCall getPlatformVersion");
 
             result.success("Android " + android.os.Build.VERSION.RELEASE);
@@ -94,7 +100,7 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
                 } else {
                     mBluetoothAdapter.disable();
                 }
-                //  result.success(mBluetoothAdapter.enable());
+                result.success(mBluetoothAdapter.isEnabled());
                 //todo 开启蓝牙开关监听
                 startService(result);
 
@@ -120,6 +126,8 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
                     jsonObject.put("name", device.getName());
                     jsonObject.put("address", device.getAddress());
                     jsonObject.put("bondState", device.getBondState());
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -127,6 +135,36 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
             }
 
             result.success(lists);
+        } else if (call.method.equals("connectGatt")) {
+            String address = (String) call.arguments;
+            mBluetoothAdapter.getRemoteDevice(address).connectGatt(activity, true,
+                    new BluetoothGattCallback() {
+                        @Override
+                        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                            super.onConnectionStateChange(gatt, status, newState);
+                        }
+
+                        @Override
+                        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                            super.onServicesDiscovered(gatt, status);
+                        }
+
+                        @Override
+                        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                            super.onCharacteristicRead(gatt, characteristic, status);
+                        }
+
+                        @Override
+                        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                            super.onCharacteristicWrite(gatt, characteristic, status);
+                        }
+
+                        @Override
+                        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                            super.onCharacteristicChanged(gatt, characteristic);
+                        }
+                    });
+
         } else {
 
             result.notImplemented();
@@ -136,6 +174,10 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
+        if (blueToothStateReceiver != null) {
+
+            activity.unregisterReceiver(blueToothStateReceiver);
+        }
 
     }
 
@@ -160,8 +202,8 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
             public void onStateOff() {
                 //do something
 
-                channel.invokeMethod("blueOnOff",false);
-                activity.unregisterReceiver(blueToothStateReceiver);
+                channel.invokeMethod("blueOnOff", false);
+                //  activity.unregisterReceiver(blueToothStateReceiver);
 
 
             }
@@ -169,8 +211,8 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
             @Override
             public void onStateOn() {
                 //do something
-                channel.invokeMethod("blueOnOff",true);
-                activity.unregisterReceiver(blueToothStateReceiver);
+                channel.invokeMethod("blueOnOff", true);
+                // activity.unregisterReceiver(blueToothStateReceiver);
             }
 
             @Override
@@ -220,5 +262,10 @@ public class BluePlugin implements FlutterPlugin, MethodCallHandler, ActivityAwa
     @Override
     public void onCancel(Object arguments) {
 
+    }
+
+    @Override
+    public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        return false;
     }
 }

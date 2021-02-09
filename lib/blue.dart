@@ -1,11 +1,16 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/services.dart';
 
 class Blue {
   static const MethodChannel _channel = const MethodChannel('blue');
 
-  static MethodCall _call;
+  static MethodChannel get getMethodChannel {
+    return _channel;
+  }
+
+/*  static MethodCall _call;
 
   static void setCall() {
     if (_call == null) {
@@ -19,7 +24,7 @@ class Blue {
   static MethodCall getMethodCall() {
     setCall();
     return _call;
-  }
+  }*/
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
@@ -42,8 +47,7 @@ class Blue {
 
   // 蓝牙开关状态
   static Future<String> get blueSwitchState async {
-    final String blueSwitchState =
-        await _channel.invokeMethod('getBlueSwitchState');
+    final String blueSwitchState = await _channel.invokeMethod('getBlueSwitchState');
     return blueSwitchState;
   }
 
@@ -60,14 +64,12 @@ class Blue {
   }
 
   // 打开蓝牙
-  static Future<bool> blueOnOff(bool onOff) async {
-    final bool isOpen = await _channel.invokeMethod('blueOnOff', onOff);
-    return isOpen;
+  static Future<Void> blueOnOff(bool onOff) async {
+    await _channel.invokeMethod('blueOnOff', onOff);
   }
 
   static Future<List<String>> get getBondedDevices async {
-    final List<dynamic> devices =
-        await _channel.invokeMethod('getBondedDevices');
+    final List<dynamic> devices = await _channel.invokeMethod('getBondedDevices');
 
     print("蓝牙设备数量 ${devices.length}");
     // print("蓝牙设备数量 ${}");

@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <!--启用应用启动设备发现或者操作蓝牙设备的超级管理员-->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
     <application
         android:name=".BaseApplication">
         <activity android:name=".BluePlugin"/>

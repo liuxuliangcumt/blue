@@ -22,7 +22,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     initPlatformState();
-
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -39,12 +38,22 @@ class _MyAppState extends State<MyApp> {
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
-    if(Blue.getMethodCall().method=="blueOnOff"){
+    /*  if(Blue.getMethodCall().method=="blueOnOff"){
       setState(() {
         _blueOpenState=Blue.getMethodCall().arguments;
 
       });
-    }
+    }*/
+
+    Blue.getMethodChannel.setMethodCallHandler((call) {
+      print("接收到Android 消息");
+      if (call.method == "blueOnOff") {
+        setState(() {
+          _blueOpenState = call.arguments;
+        });
+      }
+      return;
+    });
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -108,8 +117,8 @@ class _MyAppState extends State<MyApp> {
     List<String> devices = await Blue.getBondedDevices;
     print("蓝牙设备数量");
     print(devices?.length);
-     for(int i=0;i<devices.length;i++){
-       print(devices[i]);
-     }
+    for (int i = 0; i < devices.length; i++) {
+      print(devices[i]);
+    }
   }
 }
