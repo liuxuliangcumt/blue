@@ -80,6 +80,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              CustomPaint(painter: CustomPainter(),),
               Text('Running on: $_platformVersion\n'),
               Text('蓝牙可用否 : $_blueUsable\n'),
               Text('蓝牙名字 : $_blueName\n'),

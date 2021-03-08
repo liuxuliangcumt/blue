@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  logger_flutter: ^0.7.1
   blue:
     # When depending on this package from a real application you should use:
     #   blue: ^x.y.z
